@@ -4,7 +4,7 @@ import { FaBars, FaTimes, FaHome, FaStar, FaUserAlt, FaBoxOpen, FaSignOutAlt } f
  // Home & Reviews
 import { MdWatch } from "react-icons/md"; // Watch icon
 import { IoMdChatbubbles } from "react-icons/io"; // Sleek chatbot icon
-import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import mobticklogo from "../assets/mobticklogo.png";
 
 const Navbar = () => {
