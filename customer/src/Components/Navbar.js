@@ -31,7 +31,6 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  const navigate = useNavigate();
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(() => 
     !!localStorage.getItem("authToken") || !!localStorage.getItem("userName")
