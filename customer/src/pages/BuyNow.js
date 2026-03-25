@@ -329,6 +329,12 @@ const BuyNow = () => {
               {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
             </button>
             <button
+              onClick={() => navigate(-1)}
+              className="text-sm sm:text-lg font-bold bg-gray-500 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-600 transition text-white"
+            >
+              BACK
+            </button>
+            <button
               onClick={() => navigate("/home")}
               className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition text-white"
             >
@@ -339,7 +345,7 @@ const BuyNow = () => {
 
         {/* Main Content */}
         <main
-          className={`flex-1 flex w-full max-w-7xl mx-auto flex-col lg:flex-row gap-6 h-[calc(100vh-80px)] p-4 transition-all duration-700 ${
+          className={`flex-1 flex w-full max-w-7xl mx-auto flex-col lg:flex-row gap-6 min-h-[calc(100vh-80px)] p-4 transition-all duration-700 ${
             animateMain ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
@@ -350,7 +356,7 @@ const BuyNow = () => {
                 <img
                   src={singleProduct.image || defaultProduct.image}
                   alt={singleProduct.name || defaultProduct.name}
-                  className="w-full h-full md:w-80 md:h-80 object-contain rounded-2xl shadow-md -mt-6"
+                  className="w-full max-h-64 md:w-80 md:h-80 object-contain rounded-2xl shadow-md -mt-6"
                 />
                 <h2 className="mt-6 text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                   {singleProduct.name || defaultProduct.name}
@@ -397,14 +403,14 @@ const BuyNow = () => {
               <input type="text" name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-2 w-full" />
 
               {/* Address + Use Location */}
-              <div className="flex gap-2 mb-2">
+              <div className="flex flex-col sm:flex-row gap-2 mb-2">
                 <input type="text" name="address" placeholder="Address" value={formData.address} onChange={handleChange} className="flex-1 p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
-                <button type="button" onClick={handleUseLocation} className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm transition">
+                <button type="button" onClick={handleUseLocation} className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm transition whitespace-nowrap">
                   📍 Use My Location
                 </button>
               </div>
 
-              <div className="flex gap-2 mb-2">
+              <div className="flex flex-col sm:flex-row gap-2 mb-2">
                 <input type="text" name="city" placeholder="City" value={formData.city || ""} onChange={handleChange} className="flex-1 p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
                 <input type="text" name="state" placeholder="State" value={formData.state || ""} onChange={handleChange} className="flex-1 p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
                 <input type="text" name="pincode" placeholder="Pincode" value={formData.pincode || ""} onChange={handleChange} className="flex-1 p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />

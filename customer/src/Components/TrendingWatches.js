@@ -53,7 +53,7 @@ const TrendingWatches = ({ deals }) => {
       {/* Modal Popup */}
       {selectedWatch && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-lg max-w-lg w-full relative">
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-lg max-w-lg w-full relative max-h-[90vh] overflow-y-auto">
             {/* Close button */}
             <button
               className="absolute top-2 right-2 text-2xl font-bold text-gray-600 dark:text-gray-300"
