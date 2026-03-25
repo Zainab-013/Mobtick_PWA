@@ -47,7 +47,7 @@ const ThankYou = () => {
           Your order has been placed successfully.<br />
           We appreciate your purchase!
         </p>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <button
             onClick={handleDownloadPDF}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold transition"

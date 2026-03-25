@@ -6,6 +6,7 @@ import mobticklogo from "../assets/mobticklogo.png";
 const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000";
 
 const Unisex = () => {
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     brand: "",
     price: "",
@@ -193,14 +194,26 @@ const Unisex = () => {
           </div>
         </header>
 
+        {/* Mobile Filter Toggle Button */}
+        <div className="md:hidden px-4 pt-4">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition flex items-center justify-center gap-2"
+          >
+            {showFilters ? "✕ Hide Filters" : "☰ Show Filters"}
+          </button>
+        </div>
+
         {/* Main content */}
         <main
-          className={`flex transition-all duration-700 ${
+          className={`flex flex-col md:flex-row transition-all duration-700 ${
             animateMain ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
           {/* Sidebar Filters */}
-          <aside className="w-64 p-6 overflow-y-auto max-h-screen bg-white dark:bg-black/30 border-r border-gray-300 dark:border-white backdrop-blur-md">
+          <aside className={`${
+            showFilters ? "block" : "hidden"
+          } md:block w-full md:w-64 p-6 overflow-y-auto md:max-h-screen bg-white dark:bg-black/30 border-b md:border-b-0 md:border-r border-gray-300 dark:border-white backdrop-blur-md`}>
             <h2 className="text-xl font-bold mb-6">Filters</h2>
             <button
               onClick={resetFilters}
@@ -250,7 +263,7 @@ const Unisex = () => {
           </aside>
 
           {/* Product Grid */}
-          <section className="flex-1 p-8">
+          <section className="flex-1 p-4 sm:p-6 md:p-8">
             <h1 className="text-3xl font-bold mb-6 text-center">Unisex’s Watches</h1>
             {loading ? (
               <p className="text-center py-10">Loading products…</p>
@@ -303,7 +316,7 @@ const Unisex = () => {
               <p className="text-green-600 dark:text-green-400 font-semibold">{selectedProduct.price}</p>
               <p className="mt-2 text-gray-700 dark:text-gray-300">{selectedProduct.description}</p>
 
-              <div className="flex gap-4 mt-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4">
                 <button
                   onClick={() =>
                     navigate("/buynow", {
