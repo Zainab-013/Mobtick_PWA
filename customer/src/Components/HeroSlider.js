@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useNavigate } from "react-router-dom"; // ✅ add this
+import { useNavigate } from "react-router-dom";
 
 // Import images
 import watch1 from "../assets/watch1.jpg";
 import watch2 from "../assets/watch2.jpg";
 import watch3 from "../assets/watch3.jpg";
+
 const slides = [
   {
     brand: "Fossil",
@@ -14,7 +15,7 @@ const slides = [
     discount: "Limited Time Deal!",
     img: watch1,
     price: 15000,
-    discountedPrice: 15000 * 0.8, // 20% off
+    discountedPrice: 15000 * 0.8,
   },
   {
     brand: "Omega",
@@ -23,7 +24,7 @@ const slides = [
     discount: "Special Festive Discount!",
     img: watch2,
     price: 25000,
-    discountedPrice: 25000 * 0.85, // 15% off
+    discountedPrice: 25000 * 0.85,
   },
   {
     brand: "Rolex",
@@ -32,15 +33,14 @@ const slides = [
     discount: "Exclusive Online Offer!",
     img: watch3,
     price: 50000,
-    discountedPrice: 50000 * 0.7, // 30% off
+    discountedPrice: 50000 * 0.7,
   },
 ];
-
 
 const HeroSlider = () => {
   const [current, setCurrent] = useState(0);
   const [typedBrand, setTypedBrand] = useState("");
-  const navigate = useNavigate(); // ✅
+  const navigate = useNavigate();
 
   // Auto slide every 4s
   useEffect(() => {
@@ -52,7 +52,7 @@ const HeroSlider = () => {
 
   // Typing effect for brand name
   useEffect(() => {
-    setTypedBrand(""); // reset first
+    setTypedBrand("");
     let i = 0;
     const typing = setInterval(() => {
       if (i <= slides[current].brand.length) {
@@ -69,28 +69,25 @@ const HeroSlider = () => {
   const prevSlide = () =>
     setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
 
-  // ✅ Buy Now handler
-  // ✅ Buy Now handler
-const handleBuyNow = (slide) => {
-  const productForBuyNow = {
-    name: slide.brand,
-    image: slide.img,
-    price: slide.discountedPrice,
-    quantity: 1,
-    description: slide.desc, // ✅ include description
-    offer: slide.offer,      // optional: if you want offer too
-    discount: slide.discount // optional: if you want discount too
+  // Buy Now handler — use the image URL string (not the imported module)
+  const handleBuyNow = (slide) => {
+    const productForBuyNow = {
+      name: slide.brand,
+      image: typeof slide.img === "string" ? slide.img : slide.img,
+      price: slide.discountedPrice,
+      quantity: 1,
+      description: slide.desc,
+      offer: slide.offer,
+      discount: slide.discount,
+    };
+
+    navigate("/buynow", { state: { product: productForBuyNow } });
   };
 
-  navigate("/buynow", { state: { product: productForBuyNow } });
-};
-
-
-
   return (
-    <section className="relative w-full bg-white pt-[80px]">
+    <section className="relative w-full bg-white dark:bg-black/90 pt-[80px] transition-colors duration-500">
       {/* Top Deals Heading */}
-      <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">
+      <h2 className="text-3xl md:text-4xl font-bold text-center mb-6 dark:text-white">
          Top Deals and Discounts
       </h2>
 
@@ -107,11 +104,11 @@ const handleBuyNow = (slide) => {
             >
               {/* Left Side Text */}
               <div className="w-full md:w-1/2 flex flex-col justify-center space-y-3 md:space-y-4 text-center md:text-left pl-0 md:pl-16 lg:pl-24 order-2 md:order-1 mt-4 md:mt-0">
-                <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800">
+                <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 dark:text-white">
                   {typedBrand}
                   <span className="animate-pulse">|</span>
                 </h3>
-                <p className="text-base sm:text-lg md:text-2xl text-gray-600">{slide.desc}</p>
+                <p className="text-base sm:text-lg md:text-2xl text-gray-600 dark:text-gray-300">{slide.desc}</p>
 
                 {/* Offer & Discount */}
                 <div className="space-y-1">
@@ -123,7 +120,7 @@ const handleBuyNow = (slide) => {
                   </p>
                 </div>
 
-                {/* ✅ Buy Now Button */}
+                {/* Buy Now Button */}
                 <button
                   onClick={() => handleBuyNow(slide)}
                   className="bg-black text-white w-28 sm:w-32 py-3 sm:py-4 rounded-full shadow-md hover:scale-105 hover:bg-gray-800 transition-all duration-300 mx-auto md:mx-0"

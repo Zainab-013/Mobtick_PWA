@@ -5,16 +5,15 @@ const Seller = require("../models/seller");
 const Product = require('../models/product');
 const multer = require("multer");
 const nodemailer = require("nodemailer"); 
+const { generateToken } = require("../middleware/auth");
 
-// 🚨 CRITICAL: Define the router object
 const router = express.Router(); 
 
-// 2. Load environment variables 
+// Load environment variables 
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 
-// --- Nodemailer Configuration and OTP Sending Function ---
-
+// --- Nodemailer Configuration ---
 const transporter = nodemailer.createTransport({
     service: 'gmail', 
     auth: {
@@ -33,7 +32,7 @@ const sendOtpEmail = async (email, otp) => {
                 <h2>Mobtick OTP Verification</h2>
                 <p>Your verification OTP is:</p>
                 <strong style="font-size: 24px; color: #007BFF;">${otp}</strong>
-                <p>This code is valid for **10 minutes**.</p>
+                <p>This code is valid for <b>10 minutes</b>.</p>
             </div>
         `
     };
@@ -49,7 +48,6 @@ const sendOtpEmail = async (email, otp) => {
 };
 
 // --- OTP Helper Functions ---
-
 const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -67,19 +65,18 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- Existing Routes ---
+// --- Routes ---
+
+// Manage product (placeholder)
 router.post("/manageproduct", async (req, res) => {
     try {
-        // NOTE: Placeholder content removed for brevity, assuming your logic is here
         res.status(201).json({ success: true, msg: "Product management logic executed." });
     } catch (error) {
         res.status(500).json({ success: false, msg: "Server error." });
     }
 });
 
-// --- UPDATED ROUTES FOR OTP AUTHENTICATION ---
-
-// 1. Customer Signup (Stage 1: Send OTP) - Working
+// 1. Customer Signup (Stage 1: Send OTP)
 router.post("/signup", async (req, res) => {
     try {
         const { fullname, email, password } = req.body;
@@ -92,16 +89,17 @@ router.post("/signup", async (req, res) => {
         const otp = generateOtp();
         const otpExpires = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60000); 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedOtp = await bcrypt.hash(otp, 10);
 
         if (customer && !customer.isVerified) {
             customer.fullname = fullname;
             customer.password = hashedPassword;
-            customer.otp = otp;
+            customer.otp = hashedOtp;
             customer.otpExpires = otpExpires;
             await customer.save();
         } else {
             customer = new Customer({
-                fullname, email, password: hashedPassword, otp, otpExpires, isVerified: false
+                fullname, email, password: hashedPassword, otp: hashedOtp, otpExpires, isVerified: false
             });
             await customer.save();
         }
@@ -111,7 +109,7 @@ router.post("/signup", async (req, res) => {
 
     } catch (err) {
         if (err.message.includes("Failed to send verification email")) {
-             return res.status(500).json({ success: false, msg: "Server error: Could not send verification email. Check server logs." });
+             return res.status(500).json({ success: false, msg: "Server error: Could not send verification email." });
         }
         if (err.code === 11000) {
             return res.status(400).json({ success: false, msg: "Email already registered." });
@@ -121,44 +119,31 @@ router.post("/signup", async (req, res) => {
     }
 });
 
-// 2. NEW ROUTE: Verify OTP (Stage 2: Finalize Signup) - TROUBLESHOOTING LOGS ADDED
+// 2. Verify OTP (Stage 2: Finalize Signup)
 router.post("/verify-otp", async (req, res) => {
-    console.log("--> VERIFY OTP: Request received."); // LOG A
     try {
         const { email, otp } = req.body;
-        
-        console.log(`--> VERIFY OTP: Looking up user ${email} with OTP ${otp}.`); // LOG B
-        const customer = await Customer.findOne({ email }); // 🚨 Hanging often happens here or right after.
-
-        // If the query hangs and throws an error, it will skip to the catch block
-        
-        console.log("--> VERIFY OTP: User lookup complete."); // LOG C
+        const customer = await Customer.findOne({ email });
 
         if (!customer) {
-            console.log("--> VERIFY OTP: User not found in DB.");
             return res.status(404).json({ success: false, msg: "User not found or email mismatch." });
         }
 
         if (customer.isVerified) {
-            console.log("--> VERIFY OTP: User already verified.");
             return res.status(400).json({ success: false, msg: "Account already verified. Please login." });
         }
-        
-        console.log(`--> VERIFY OTP: Checking OTP and expiration. DB OTP: ${customer.otp}, Expiration: ${customer.otpExpires}`); // LOG D
 
-        if (customer.otp !== otp || customer.otpExpires < new Date()) {
-            
-            console.log("--> VERIFY OTP: Validation failed. Clearing OTP."); // LOG E (Failure Path)
-            
+        const isOtpExpired = customer.otpExpires < new Date();
+        const isOtpValid = customer.otp ? await bcrypt.compare(otp, customer.otp) : false;
+
+        if (!isOtpValid || isOtpExpired) {
             customer.otp = undefined;
             customer.otpExpires = undefined;
             await customer.save();
-
             return res.status(400).json({ success: false, msg: "Invalid or expired OTP. Please try signup again." });
         }
         
-        // Success Path
-        console.log("--> VERIFY OTP: Validation successful. Saving verification state."); // LOG F (Success Path)
+        // Success
         customer.isVerified = true;
         customer.otp = undefined; 
         customer.otpExpires = undefined;
@@ -167,50 +152,60 @@ router.post("/verify-otp", async (req, res) => {
         res.json({ success: true, msg: "Email verified! Signup complete." }); 
 
     } catch (err) {
-        console.error("--> VERIFY OTP: FATAL CATCH BLOCK EXECUTED:", err);
+        console.error("Verify OTP error:", err);
         res.status(500).json({ success: false, msg: "Server error during verification." });
     }
 });
 
-// 3. Customer Login 
+// 3. Customer Login — returns JWT token
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
-        const customer = await Customer.findOne({ email }); // 1. Find the customer
+        const customer = await Customer.findOne({ email });
 
-        if (!customer) return res.json({ success: false, msg: "Invalid credentials" }); // 2. Check if customer exists
-
-        // 🚨 CRITICAL CHECK 1: Ensure customer is verified
-        if (!customer.isVerified) {
-            return res.json({ success: false, msg: "Account not verified. Please complete OTP verification first." });
+        if (!customer) {
+            return res.status(401).json({ success: false, msg: "Invalid credentials" });
         }
 
-        // 3. Compare the provided password with the stored hash
-        const isMatch = await bcrypt.compare(password, customer.password);
-        if (!isMatch) return res.json({ success: false, msg: "Invalid credentials" });
+        if (!customer.isVerified) {
+            return res.status(403).json({ success: false, msg: "Account not verified. Please complete OTP verification first." });
+        }
 
-        // 4. Success
-        res.json({ success: true, role: "customer" });
+        const isMatch = await bcrypt.compare(password, customer.password);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, msg: "Invalid credentials" });
+        }
+
+        // Generate JWT
+        const token = generateToken({ id: customer._id, email: customer.email, role: "customer" });
+        res.json({ success: true, role: "customer", token, user: { name: customer.fullname, email: customer.email } });
     } catch (err) {
         console.error("Customer Login server error:", err);
         res.status(500).json({ success: false, msg: "Server error" });
     }
 });
-// --- Seller Login (Kept Same) ---
+
+// 4. Seller Login — returns JWT token
 router.post("/seller/login", async (req, res) => {
     const { email, password } = req.body;
     try {
         const seller = await Seller.findOne({ email });
 
-        if (!seller) return res.json({ success: false, msg: "Invalid credentials" });
+        if (!seller) {
+            return res.status(401).json({ success: false, msg: "Invalid credentials" });
+        }
 
         const isMatch = await bcrypt.compare(password, seller.password);
-        if (!isMatch) return res.json({ success: false, msg: "Invalid credentials" });
+        if (!isMatch) {
+            return res.status(401).json({ success: false, msg: "Invalid credentials" });
+        }
 
-        res.json({ success: true, role: "seller" });
+        const token = generateToken({ id: seller._id, email: seller.email, role: "seller" });
+        res.json({ success: true, role: "seller", token });
     } catch (err) {
         console.error("Seller Login server error:", err);
         res.status(500).json({ success: false, msg: "Server error" });
     }
 });
+
 module.exports = router;

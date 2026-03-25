@@ -3,11 +3,12 @@
 const express = require("express");
 const router = express.Router();
 const Order = require("../models/order");
+const { verifyToken } = require("../middleware/auth");
 
 // ============================================
 // POST / - Create order
 // ============================================
-router.post("/", async (req, res) => {
+router.post("/", verifyToken, async (req, res) => {
   try {
     const {
       customer,
@@ -58,7 +59,7 @@ router.post("/", async (req, res) => {
 // ============================================
 // GET /customers - Fetch all customers/orders
 // ============================================
-router.get("/customers", async (req, res) => {
+router.get("/customers", verifyToken, async (req, res) => {
   try {
     console.log("📊 Fetching customers...");
     
@@ -128,7 +129,7 @@ router.get("/customers", async (req, res) => {
 // ============================================
 // GET /stats - Get statistics
 // ============================================
-router.get("/stats", async (req, res) => {
+router.get("/stats", verifyToken, async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
     const pendingOrders = await Order.countDocuments({ paymentStatus: "pending" });

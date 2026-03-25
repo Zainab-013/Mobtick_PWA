@@ -1,8 +1,11 @@
-// src/pages/BuyNowModernCompact.js
+// src/pages/BuyNow.js
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import mobticklogo from "../assets/mobticklogo.png";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
+import { useDarkMode } from "../DarkModeContext";
+
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000";
 
 const CheckoutStripeForm = ({ amount, onSuccess, disabled }) => {
   const stripe = useStripe();
@@ -14,15 +17,14 @@ const CheckoutStripeForm = ({ amount, onSuccess, disabled }) => {
     setLoading(true);
 
     try {
-      // 1. Fetch clientSecret from backend
-      const response = await fetch(
-  "https://mobtick-backend.onrender.com/api/create-payment-intent",
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount }),
-  }
-);
+      const response = await fetch(`${API_BASE}/api/payment/create-payment-intent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify({ amount }),
+      });
 
       const data = await response.json();
       if (!data.clientSecret) {
@@ -31,7 +33,6 @@ const CheckoutStripeForm = ({ amount, onSuccess, disabled }) => {
         return;
       }
 
-      // 2. Confirm Stripe card payment
       const result = await stripe.confirmCardPayment(data.clientSecret, {
         payment_method: {
           card: elements.getElement(CardElement),
@@ -42,7 +43,6 @@ const CheckoutStripeForm = ({ amount, onSuccess, disabled }) => {
       if (result.error) {
         alert(result.error.message);
       } else if (result.paymentIntent.status === "succeeded") {
-        // Pass paymentIntentId to order saving function
         onSuccess(result.paymentIntent.id);
       }
     } catch (err) {
@@ -74,6 +74,7 @@ const BuyNow = () => {
   const cartItems = location.state?.cartItems;
   const isCartCheckout = cartItems && cartItems.length > 0;
 
+  // Safe fallback if no product is passed
   const defaultProduct = singleProduct || {
     name: "Sample Watch",
     price: 4999,
@@ -100,7 +101,7 @@ const BuyNow = () => {
     totalAmount: defaultProduct.price * initialQuantity,
   });
 
-  const [darkMode, setDarkMode] = useState(true);
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const [animateHeader, setAnimateHeader] = useState(false);
   const [animateMain, setAnimateMain] = useState(false);
 
@@ -128,6 +129,26 @@ const BuyNow = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const validateForm = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9]{10}$/;
+    const pincodeRegex = /^[0-9]{6}$/;
+
+    if (!emailRegex.test(formData.email)) {
+      alert("Please enter a valid email address.");
+      return false;
+    }
+    if (!phoneRegex.test(formData.phone)) {
+      alert("Please enter a valid 10-digit phone number.");
+      return false;
+    }
+    if (!pincodeRegex.test(formData.pincode)) {
+      alert("Please enter a valid 6-digit pincode.");
+      return false;
+    }
+    return true;
+  };
+
   const allDetailsFilled =
     formData.name &&
     formData.email &&
@@ -144,6 +165,7 @@ const BuyNow = () => {
       alert("Please fill all required fields!");
       return;
     }
+    if (!validateForm()) return;
 
     const orderPayload = {
       customer: {
@@ -166,16 +188,16 @@ const BuyNow = () => {
         : [
             {
               id: singleProduct?.id || "sample-id",
-              name: formData.watchType,
-              image: singleProduct?.image || "/images/sample.jpg",
-              price: formData.price,
+              name: defaultProduct.name,
+              image: defaultProduct.image,
+              price: defaultProduct.price,
               quantity: formData.quantity,
             },
           ],
-      brand: formData.brand,
-      watchType: formData.watchType,
+      brand: defaultProduct.name,
+      watchType: defaultProduct.name,
       quantity: formData.quantity,
-      pricePerItem: formData.price,
+      pricePerItem: defaultProduct.price,
       totalAmount: formData.totalAmount,
       paymentMode: formData.priceMode,
       paymentIntentId: paymentIntentId || null,
@@ -184,14 +206,14 @@ const BuyNow = () => {
     };
 
     try {
-      const res = await fetch(
-  "https://mobtick-backend.onrender.com/api/order",
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(orderPayload),
-  }
-);
+      const res = await fetch(`${API_BASE}/api/order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify(orderPayload),
+      });
 
       const data = await res.json();
       if (data.ok) {
@@ -208,8 +230,17 @@ const BuyNow = () => {
           localStorage.setItem("cartItems", JSON.stringify(remainingCart));
         }
 
-        alert("Order placed successfully!");
-        navigate("/thankyou");
+        // Navigate to thank you page with real order details
+        navigate("/thankyou", {
+          state: {
+            orderDetails: {
+              product: defaultProduct.name,
+              amount: formData.totalAmount,
+              date: new Date().toLocaleString(),
+              orderId: data.orderId || "ORDER" + Date.now(),
+            },
+          },
+        });
       } else {
         alert("Failed to place order.");
       }
@@ -219,39 +250,56 @@ const BuyNow = () => {
     }
   };
 
-  // COD payment handler
   const handleCOD = () => {
     if (!allDetailsFilled) {
       alert("Please fill all required fields!");
       return;
     }
+    if (!validateForm()) return;
     completeOrder();
   };
 
   const handleUseLocation = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
-          );
-          const data = await res.json();
-          setFormData((prev) => ({
-            ...prev,
-            address: data.address.road || "",
-            city:
-              data.address.city ||
-              data.address.town ||
-              data.address.village ||
-              "",
-            state: data.address.state || "",
-            pincode: data.address.postcode || "",
-          }));
-        } catch (err) {
-          alert("Unable to fetch location. Try manually.");
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+            );
+            const data = await res.json();
+            setFormData((prev) => ({
+              ...prev,
+              address: data.address.road || "",
+              city:
+                data.address.city ||
+                data.address.town ||
+                data.address.village ||
+                "",
+              state: data.address.state || "",
+              pincode: data.address.postcode || "",
+            }));
+          } catch (err) {
+            alert("Unable to fetch location. Try manually.");
+          }
+        },
+        (error) => {
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              alert("Location access denied. Please enter your address manually.");
+              break;
+            case error.POSITION_UNAVAILABLE:
+              alert("Location unavailable. Please enter your address manually.");
+              break;
+            case error.TIMEOUT:
+              alert("Location request timed out. Please try again or enter manually.");
+              break;
+            default:
+              alert("Unable to get location. Please enter your address manually.");
+          }
         }
-      });
+      );
     } else {
       alert("Geolocation is not supported by your browser.");
     }
@@ -275,7 +323,7 @@ const BuyNow = () => {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={toggleDarkMode}
               className="text-xs sm:text-sm bg-gray-700 dark:bg-gray-200 text-white dark:text-black px-3 py-1 rounded hover:opacity-80 transition"
             >
               {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
@@ -284,7 +332,7 @@ const BuyNow = () => {
               onClick={() => navigate("/home")}
               className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition text-white"
             >
-              LOGOUT
+              HOME
             </button>
           </div>
         </header>
@@ -362,9 +410,6 @@ const BuyNow = () => {
                 <input type="text" name="pincode" placeholder="Pincode" value={formData.pincode || ""} onChange={handleChange} className="flex-1 p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
               </div>
 
-              <input type="text" name="brand" placeholder="Brand Name" value={formData.brand} onChange={handleChange} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-2 w-full" />
-              <input type="text" name="watchType" placeholder="Type of Watch" value={formData.watchType} onChange={handleChange} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-2 w-full" />
-              <input type="number" name="price" placeholder="Price per Item" value={formData.price} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-2 w-full" />
               <input type="date" name="orderDate" placeholder="Order Date" value={formData.orderDate} onChange={handleChange} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-2 w-full" />
 
               <select name="priceMode" value={formData.priceMode} onChange={handleChange} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition w-full">
@@ -390,14 +435,16 @@ const BuyNow = () => {
                     </div>
                   ))}
                 </div>
-              ) : (
+              ) : singleProduct ? (
                 <div className="flex justify-between items-center text-gray-700 dark:text-gray-200 text-sm mt-2">
                   <div className="flex items-center gap-2">
                     <img src={singleProduct.image} alt={singleProduct.name} className="w-12 h-12 object-cover rounded-lg" />
-                    <span>{formData.watchType} × {formData.quantity}</span>
+                    <span>{defaultProduct.name} × {formData.quantity}</span>
                   </div>
                   <span>₹{formData.totalAmount}</span>
                 </div>
+              ) : (
+                <p className="text-gray-500 mt-2 text-sm">No product selected.</p>
               )}
 
               <div className="border-t pt-2 flex justify-between font-bold text-gray-900 dark:text-white text-sm">

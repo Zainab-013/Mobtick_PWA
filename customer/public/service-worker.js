@@ -1,5 +1,5 @@
 // Mobtick PWA Service Worker
-const CACHE_NAME = 'mobtick-cache-v1';
+const CACHE_NAME = 'mobtick-cache-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

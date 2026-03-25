@@ -5,12 +5,24 @@ import { BsWatch } from "react-icons/bs"; // Men
 import { GiWatch } from "react-icons/gi"; // Women
 import { MdOutlineWatch } from "react-icons/md"; // Unisex
 import mobticklogo from "../assets/mobticklogo.png";
+import { useDarkMode } from "../DarkModeContext";
 
 const Watches = () => {
-  const [darkMode, setDarkMode] = useState(true);
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const [animateHeader, setAnimateHeader] = useState(false);
   const [animateMain, setAnimateMain] = useState(false);
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("authToken"));
+
+  useEffect(() => {
+    const checkAuth = () => setIsLoggedIn(!!localStorage.getItem("authToken"));
+    window.addEventListener("storage", checkAuth);
+    window.addEventListener("authChange", checkAuth);
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("authChange", checkAuth);
+    };
+  }, []);
 
   useEffect(() => {
     const timer1 = setTimeout(() => setAnimateHeader(true), 100);
@@ -47,7 +59,7 @@ const Watches = () => {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={toggleDarkMode}
               className="text-xs sm:text-sm bg-gray-700 dark:bg-gray-200 
                          text-white dark:text-black px-3 py-1 rounded 
                          hover:opacity-80 transition"
@@ -55,13 +67,28 @@ const Watches = () => {
               {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
             </button>
 
-            <button
-              onClick={() => navigate("/home")}
-              className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 
-                         rounded hover:bg-gray-500 transition"
-            >
-              LOGOUT
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={() => {
+                  localStorage.removeItem("authToken");
+                  localStorage.removeItem("userName");
+                  localStorage.removeItem("userEmail");
+                  navigate("/login");
+                }}
+                className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 
+                           rounded hover:bg-gray-500 transition"
+              >
+                LOGOUT
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 
+                           rounded hover:bg-gray-500 transition"
+              >
+                LOGIN
+              </button>
+            )}
           </div>
         </header>
 

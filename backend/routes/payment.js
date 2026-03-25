@@ -1,10 +1,10 @@
 // backend/routes/payment.js
 const express = require("express");
 const router = express.Router();
-const Stripe = require("stripe");
 const stripe = require('stripe')(process.env.STRIPE_API_KEY);
+const { verifyToken } = require("../middleware/auth");
 
-router.post("/create-payment-intent", async (req, res) => {
+router.post("/create-payment-intent", verifyToken, async (req, res) => {
   const { amount } = req.body;
   try {
     const paymentIntent = await stripe.paymentIntents.create({

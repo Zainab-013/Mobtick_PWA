@@ -1,14 +1,62 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/product");
+const { verifyToken } = require("../middleware/auth");
 
 // --- Helper to escape regex ---
 function escapeRegex(text = "") {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// --- CREATE PRODUCT ---
-router.post("/", async (req, res) => {
+// --- Helper to build filter from query params ---
+function buildFilter(query, genderValue) {
+  const {
+    brand, style, dialShape, dialColor, strapMaterial,
+    strapColor, caseSize, caseMaterial, specialEdition,
+    minDiscount, maxDiscount, minPrice, maxPrice,
+  } = query;
+
+  const filter = {};
+  if (genderValue) filter.gender = genderValue;
+
+  // Text / enum filters
+  if (brand) filter.brandName = { $regex: escapeRegex(brand.trim()), $options: "i" };
+  if (style) filter.typeOfWatch = { $regex: escapeRegex(style.trim()), $options: "i" };
+  if (dialShape) filter.dialShape = { $regex: escapeRegex(dialShape.trim()), $options: "i" };
+  if (dialColor) filter.dialColor = { $regex: escapeRegex(dialColor.trim()), $options: "i" };
+  if (strapMaterial) filter.strapMaterial = { $regex: escapeRegex(strapMaterial.trim()), $options: "i" };
+  if (strapColor) filter.strapColor = { $regex: escapeRegex(strapColor.trim()), $options: "i" };
+  if (caseSize) filter.caseSize = { $regex: escapeRegex(caseSize.trim()), $options: "i" };
+  if (caseMaterial) filter.caseMaterial = { $regex: escapeRegex(caseMaterial.trim()), $options: "i" };
+  if (specialEdition) filter.specialEdition = { $regex: escapeRegex(specialEdition.trim()), $options: "i" };
+
+  // Price filter
+  if (minPrice && maxPrice) filter.price = { $gte: Number(minPrice), $lte: Number(maxPrice) };
+  else if (minPrice) filter.price = { $gte: Number(minPrice) };
+  else if (maxPrice) filter.price = { $lte: Number(maxPrice) };
+
+  // Discount filter
+  if (minDiscount && maxDiscount) filter.discount = { $gte: Number(minDiscount), $lte: Number(maxDiscount) };
+  else if (minDiscount) filter.discount = { $gte: Number(minDiscount) };
+  else if (maxDiscount) filter.discount = { $lte: Number(maxDiscount) };
+
+  return filter;
+}
+
+// --- Handler for filtered product queries ---
+async function getFilteredProducts(req, res, genderValue, label) {
+  try {
+    const filter = buildFilter(req.query, genderValue);
+    const products = await Product.find(filter).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, products });
+  } catch (err) {
+    console.error(`GET /api/products/${label} error:`, err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+}
+
+// --- CREATE PRODUCT (protected) ---
+router.post("/", verifyToken, async (req, res) => {
   try {
     const product = await Product.create(req.body);
     res.status(201).json({ success: true, msg: "Product added successfully!", product });
@@ -21,164 +69,22 @@ router.post("/", async (req, res) => {
   }
 });
 
+// ======================================================
+// Category routes (above dynamic routes)
+// ======================================================
+router.get("/unisex", (req, res) => getFilteredProducts(req, res, "Unisex", "unisex"));
+router.get("/men", (req, res) => getFilteredProducts(req, res, "Male", "men"));
+router.get("/women", (req, res) => getFilteredProducts(req, res, "Female", "women"));
 
-// ======================================================
-// ✅ KEEP CATEGORY ROUTES ABOVE THE DYNAMIC ONES
-// ======================================================
-// ---GET UNISEX PRODUCTS ---
-router.get("/unisex", async (req, res) => {
+// --- GET ALL PRODUCTS (moved above /:id to prevent conflict) ---
+router.get("/", async (req, res) => {
   try {
-    const {
-      brand,
-      style,
-      dialShape,
-      dialColor,
-      strapMaterial,
-      strapColor,
-      caseSize,
-      caseMaterial,
-      specialEdition,
-      minDiscount,
-      maxDiscount,
-      minPrice,
-      maxPrice,
-    } = req.query;
-
-    const filter = { gender: "Unisex" };
-
-    // Text / enum filters
-    if (brand) filter.brandName = { $regex: escapeRegex(brand.trim()), $options: "i" };
-    if (style) filter.typeOfWatch = { $regex: escapeRegex(style.trim()), $options: "i" };
-    if (dialShape) filter.dialShape = { $regex: escapeRegex(dialShape.trim()), $options: "i" };
-    if (dialColor) filter.dialColor = { $regex: escapeRegex(dialColor.trim()), $options: "i" };
-    if (strapMaterial) filter.strapMaterial = { $regex: escapeRegex(strapMaterial.trim()), $options: "i" };
-    if (strapColor) filter.strapColor = { $regex: escapeRegex(strapColor.trim()), $options: "i" };
-    if (caseSize) filter.caseSize = { $regex: escapeRegex(caseSize.trim()), $options: "i" };
-    if (caseMaterial) filter.caseMaterial = { $regex: escapeRegex(caseMaterial.trim()), $options: "i" };
-    if (specialEdition) filter.specialEdition = { $regex: escapeRegex(specialEdition.trim()), $options: "i" };
-
-    // ✅ Price filter
-    if (minPrice && maxPrice) filter.price = { $gte: Number(minPrice), $lte: Number(maxPrice) };
-    else if (minPrice) filter.price = { $gte: Number(minPrice) };
-    else if (maxPrice) filter.price = { $lte: Number(maxPrice) };
-
-    // ✅ Discount filter
-    if (minDiscount && maxDiscount) filter.discount = { $gte: Number(minDiscount), $lte: Number(maxDiscount) };
-    else if (minDiscount) filter.discount = { $gte: Number(minDiscount) };
-    else if (maxDiscount) filter.discount = { $lte: Number(maxDiscount) };
-
-    const products = await Product.find(filter).sort({ createdAt: -1 });
+    const products = await Product.find({});
     res.status(200).json({ success: true, products });
-  } catch (err) {
-    console.error("GET /api/products/unisex error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
+  } catch (error) {
+    res.status(500).json({ success: false, msg: "Error fetching products.", error: error.message });
   }
 });
-// --- GET MEN PRODUCTS ---
-router.get("/men", async (req, res) => {
-  try {
-    const {
-      brand,
-      style,
-      dialShape,
-      dialColor,
-      strapMaterial,
-      strapColor,
-      caseSize,
-      caseMaterial,
-      specialEdition,
-      minDiscount,
-      maxDiscount,
-      minPrice,
-      maxPrice,
-    } = req.query;
-
-    const filter = { gender: "Male" };
-
-    // Text / enum filters
-    if (brand) filter.brandName = { $regex: escapeRegex(brand.trim()), $options: "i" };
-    if (style) filter.typeOfWatch = { $regex: escapeRegex(style.trim()), $options: "i" };
-    if (dialShape) filter.dialShape = { $regex: escapeRegex(dialShape.trim()), $options: "i" };
-    if (dialColor) filter.dialColor = { $regex: escapeRegex(dialColor.trim()), $options: "i" };
-    if (strapMaterial) filter.strapMaterial = { $regex: escapeRegex(strapMaterial.trim()), $options: "i" };
-    if (strapColor) filter.strapColor = { $regex: escapeRegex(strapColor.trim()), $options: "i" };
-    if (caseSize) filter.caseSize = { $regex: escapeRegex(caseSize.trim()), $options: "i" };
-    if (caseMaterial) filter.caseMaterial = { $regex: escapeRegex(caseMaterial.trim()), $options: "i" };
-    if (specialEdition) filter.specialEdition = { $regex: escapeRegex(specialEdition.trim()), $options: "i" };
-
-    // ✅ Price filter
-    if (minPrice && maxPrice) filter.price = { $gte: Number(minPrice), $lte: Number(maxPrice) };
-    else if (minPrice) filter.price = { $gte: Number(minPrice) };
-    else if (maxPrice) filter.price = { $lte: Number(maxPrice) };
-
-    // ✅ Discount filter
-    if (minDiscount && maxDiscount) filter.discount = { $gte: Number(minDiscount), $lte: Number(maxDiscount) };
-    else if (minDiscount) filter.discount = { $gte: Number(minDiscount) };
-    else if (maxDiscount) filter.discount = { $lte: Number(maxDiscount) };
-
-    const products = await Product.find(filter).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, products });
-  } catch (err) {
-    console.error("GET /api/products/men error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-});
-
-
-// --- GET WOMEN PRODUCTS ---
-router.get("/women", async (req, res) => {
-  try {
-    const {
-      brand,
-      style,
-      dialShape,
-      dialColor,
-      strapMaterial,
-      strapColor,
-      caseSize,
-      caseMaterial,
-      specialEdition,
-      minDiscount,
-      maxDiscount,
-      minPrice,
-      maxPrice,
-    } = req.query;
-
-    const filter = { gender: "Female" };
-
-    // Text / enum filters
-    if (brand) filter.brandName = { $regex: escapeRegex(brand.trim()), $options: "i" };
-    if (style) filter.typeOfWatch = { $regex: escapeRegex(style.trim()), $options: "i" };
-    if (dialShape) filter.dialShape = { $regex: escapeRegex(dialShape.trim()), $options: "i" };
-    if (dialColor) filter.dialColor = { $regex: escapeRegex(dialColor.trim()), $options: "i" };
-    if (strapMaterial) filter.strapMaterial = { $regex: escapeRegex(strapMaterial.trim()), $options: "i" };
-    if (strapColor) filter.strapColor = { $regex: escapeRegex(strapColor.trim()), $options: "i" };
-    if (caseSize) filter.caseSize = { $regex: escapeRegex(caseSize.trim()), $options: "i" };
-    if (caseMaterial) filter.caseMaterial = { $regex: escapeRegex(caseMaterial.trim()), $options: "i" };
-    if (specialEdition) filter.specialEdition = { $regex: escapeRegex(specialEdition.trim()), $options: "i" };
-
-    // ✅ Price filter
-    if (minPrice && maxPrice) filter.price = { $gte: Number(minPrice), $lte: Number(maxPrice) };
-    else if (minPrice) filter.price = { $gte: Number(minPrice) };
-    else if (maxPrice) filter.price = { $lte: Number(maxPrice) };
-
-    // ✅ Discount filter
-    if (minDiscount && maxDiscount) filter.discount = { $gte: Number(minDiscount), $lte: Number(maxDiscount) };
-    else if (minDiscount) filter.discount = { $gte: Number(minDiscount) };
-    else if (maxDiscount) filter.discount = { $lte: Number(maxDiscount) };
-
-    const products = await Product.find(filter).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, products });
-  } catch (err) {
-    console.error("GET /api/products/women error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-});
-
-
-// ======================================================
-// 🚀 Dynamic routes BELOW
-// ======================================================
 
 // --- GET SINGLE PRODUCT ---
 router.get("/:id", async (req, res) => {
@@ -193,18 +99,8 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// --- GET ALL PRODUCTS ---
-router.get("/", async (req, res) => {
-  try {
-    const products = await Product.find({});
-    res.status(200).json({ success: true, products });
-  } catch (error) {
-    res.status(500).json({ success: false, msg: "Error fetching products.", error: error.message });
-  }
-});
-
-// --- UPDATE PRODUCT ---
-router.put("/:id", async (req, res) => {
+// --- UPDATE PRODUCT (protected) ---
+router.put("/:id", verifyToken, async (req, res) => {
   const updateData = { ...req.body };
 
   if (updateData.startDate) {
@@ -234,8 +130,8 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// --- DELETE PRODUCT ---
-router.delete("/:id", async (req, res) => {
+// --- DELETE PRODUCT (protected) ---
+router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const result = await Product.findByIdAndDelete(req.params.id);
     if (!result) return res.status(404).json({ success: false, msg: "Product not found." });

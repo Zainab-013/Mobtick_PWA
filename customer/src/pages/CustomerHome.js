@@ -4,11 +4,12 @@ import HeroSlider from "../Components/HeroSlider";
 import TrendingWatches from "../Components/TrendingWatches";
 import PublicReviews from "../Components/PublicReviews";
 import Footer from "../Components/Footer";
+import { useDarkMode } from "../DarkModeContext";
 
-const PRODUCTS_API = "https://mobtick-backend.onrender.com/api/products";
-const REVIEWS_API = "https://mobtick-backend.onrender.com/api/reviews/top?limit=3";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000";
 
 const CustomerHome = () => {
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
@@ -17,10 +18,9 @@ const CustomerHome = () => {
   const [reviewsErr, setReviewsErr] = useState("");
 
   useEffect(() => {
-    // ✅ Fetch products
     const fetchProducts = async () => {
       try {
-        const res = await fetch(PRODUCTS_API);
+        const res = await fetch(`${API_BASE}/api/products`);
         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
 
         const data = await res.json();
@@ -40,10 +40,9 @@ const CustomerHome = () => {
       }
     };
 
-    // ✅ Fetch top-rated reviews
     const fetchTopReviews = async () => {
       try {
-        const res = await fetch(REVIEWS_API);
+        const res = await fetch(`${API_BASE}/api/reviews/top?limit=3`);
         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
 
         const data = await res.json();
@@ -63,39 +62,47 @@ const CustomerHome = () => {
     fetchTopReviews();
   }, []);
 
-  const sliderImages = deals.slice(0, 3).map((w) => w.imageUrl).filter(Boolean);
-
   return (
-    <div>
-      {/* Hero Slider */}
-      {sliderImages.length > 0 ? <HeroSlider images={sliderImages} /> : <HeroSlider />}
+    <div className={darkMode ? "dark" : ""}>
+      <div className="min-h-screen bg-white dark:bg-black/90 text-gray-900 dark:text-white transition-all duration-500">
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={toggleDarkMode}
+          className="fixed top-20 right-4 z-50 text-xs sm:text-sm bg-gray-700 dark:bg-gray-200 text-white dark:text-black px-3 py-1.5 rounded-full shadow-lg hover:opacity-80 transition"
+        >
+          {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+        </button>
 
-      {/* Trending Watches Section */}
-      <section className="py-10 px-4">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 text-gray-900">Trending Watches</h2>
+        {/* Hero Slider */}
+        <HeroSlider />
 
-        {loading ? (
-          <p className="text-center text-lg py-6">Loading...</p>
-        ) : errMsg ? (
-          <p className="text-center text-lg py-6 text-red-500">{errMsg}</p>
-        ) : deals.length > 0 ? (
-          <TrendingWatches deals={deals} />
+        {/* Trending Watches Section */}
+        <section className="py-10 px-4">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 text-gray-900 dark:text-white">Trending Watches</h2>
+
+          {loading ? (
+            <p className="text-center text-lg py-6 dark:text-gray-300">Loading...</p>
+          ) : errMsg ? (
+            <p className="text-center text-lg py-6 text-red-500">{errMsg}</p>
+          ) : deals.length > 0 ? (
+            <TrendingWatches deals={deals} />
+          ) : (
+            <p className="text-center text-lg py-6 text-gray-600 dark:text-gray-400">
+              No trending watches available.
+            </p>
+          )}
+        </section>
+
+        {/* Public Reviews Section */}
+        {reviewsErr ? (
+          <p className="text-center text-lg py-6 text-red-500">{reviewsErr}</p>
         ) : (
-          <p className="text-center text-lg py-6 text-gray-600">
-            No trending watches available.
-          </p>
+          <PublicReviews reviews={reviews} />
         )}
-      </section>
 
-      {/* Public Reviews Section */}
-      {reviewsErr ? (
-        <p className="text-center text-lg py-6 text-red-500">{reviewsErr}</p>
-      ) : (
-        <PublicReviews reviews={reviews} />
-      )}
-
-      {/* Footer */}
-      <Footer />
+        {/* Footer */}
+        <Footer />
+      </div>
     </div>
   );
 };

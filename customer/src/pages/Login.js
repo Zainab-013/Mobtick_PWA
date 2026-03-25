@@ -1,56 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useDarkMode } from "../DarkModeContext";
 
-// 🚨 FIX: Define the base path for all authentication endpoints
-const AUTH_BASE_URL = "https://mobtick-backend.onrender.com/api/auth";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000";
 
 const Login = () => {
     const [showShimmer, setShowShimmer] = useState(true);
-    const [darkMode, setDarkMode] = useState(false);
+    const { darkMode, toggleDarkMode } = useDarkMode();
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const location = useLocation();
 
     useEffect(() => {
         const timer = setTimeout(() => setShowShimmer(false), 1800);
         return () => clearTimeout(timer);
     }, []);
 
-    const toggleDarkMode = () => setDarkMode(!darkMode);
+
     const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError("");
+        setLoading(true);
 
-        // Decide if seller or customer based on URL
-        const isSeller = location.pathname.includes("seller");
-        const endpoint = isSeller ? "/seller/login" : "/login";
-
-        // 🚨 FIX APPLIED HERE: Use AUTH_BASE_URL prefix for the fetch call
         try {
-            const res = await fetch(`${AUTH_BASE_URL}${endpoint}`, {
+            const res = await fetch(`${API_BASE}/api/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
             });
 
             const data = await res.json();
+            console.log("Login response:", data);
             if (data.success) {
-                if (data.role === "seller") {
-                    navigate("/dashboard");
-                } else {
-                    navigate("/home"); // Changed to /home, as /dashboard is usually for sellers
+                // Store auth token and user info
+                if (data.token) {
+                    localStorage.setItem("authToken", data.token);
+                    console.log("Token saved:", localStorage.getItem("authToken") ? "YES" : "NO");
                 }
+                if (data.user) {
+                    localStorage.setItem("userName", data.user.name);
+                    localStorage.setItem("userEmail", data.user.email);
+                    console.log("User saved:", localStorage.getItem("userName"));
+                }
+                // Notify Navbar about auth change
+                window.dispatchEvent(new Event("authChange"));
+                // Small delay to ensure state propagates before navigation
+                setTimeout(() => navigate("/home"), 100);
             } else {
                 setError(data.msg);
             }
         } catch (err) {
             console.error("Login fetch error:", err);
             setError("⚠️ Server error, try again later.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -100,19 +108,17 @@ const Login = () => {
                     <div className="flex justify-center">
                         <button
                             type="submit"
-                            className="w-full px-14 py-2 rounded-md text-white bg-gray-600 hover:bg-gray-700 transition text-sm"
+                            disabled={loading}
+                            className={`w-full px-14 py-2 rounded-md text-white bg-gray-600 hover:bg-gray-700 transition text-sm ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            Login
+                            {loading ? 'Logging in...' : 'Login'}
                         </button>
                     </div>
                 </form>
 
-                {/* Only show signup button if it's NOT seller login */}
-                {!location.pathname.includes("seller") && (
-<button onClick={() => navigate("/signup")} className="mt-3 text-white underline w-full">
-    Signup
-</button>
-                )}
+                <button onClick={() => navigate("/signup")} className="mt-3 text-white underline w-full">
+                    Signup
+                </button>
             </div>
         </div>
     );

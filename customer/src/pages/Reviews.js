@@ -3,16 +3,30 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
 import mobticklogo from "../assets/mobticklogo.png";
+import { useDarkMode } from "../DarkModeContext";
+
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000";
 
 
 const Reviews = () => {
-  const [darkMode, setDarkMode] = useState(true);
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const [animateHeader, setAnimateHeader] = useState(false);
   const [animateMain, setAnimateMain] = useState(false);
   const [form, setForm] = useState({ name: "", rating: 0, comment: "" });
   const [reviews, setReviews] = useState([]);
 
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("authToken"));
+
+  useEffect(() => {
+    const checkAuth = () => setIsLoggedIn(!!localStorage.getItem("authToken"));
+    window.addEventListener("storage", checkAuth);
+    window.addEventListener("authChange", checkAuth);
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("authChange", checkAuth);
+    };
+  }, []);
 
   // Animations
   useEffect(() => {
@@ -28,8 +42,8 @@ const Reviews = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-       console.log("Calling API:", "https://mobtick-backend.onrender.com/api/reviews");
-const res = await fetch("https://mobtick-backend.onrender.com/api/reviews");
+       console.log("Calling API:", `${API_BASE}/api/reviews`);
+const res = await fetch(`${API_BASE}/api/reviews`);
 
         console.log("Response status:", res.status);
         const data = await res.json();
@@ -44,6 +58,11 @@ const res = await fetch("https://mobtick-backend.onrender.com/api/reviews");
   // ✅ Submit review
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isLoggedIn) {
+      alert("Please login to submit a review.");
+      navigate("/login");
+      return;
+    }
     if (!form.name || !form.rating || !form.comment) {
       alert("Please fill in all fields");
       return;
@@ -51,10 +70,13 @@ const res = await fetch("https://mobtick-backend.onrender.com/api/reviews");
 
     try {
      const res = await fetch(
-  "https://mobtick-backend.onrender.com/api/reviews",
+  `${API_BASE}/api/reviews`,
   {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+    },
     body: JSON.stringify(form),
   }
 );
@@ -103,18 +125,32 @@ const res = await fetch("https://mobtick-backend.onrender.com/api/reviews");
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={toggleDarkMode}
               className="text-xs sm:text-sm bg-gray-700 dark:bg-gray-200 text-white dark:text-black px-3 py-1 rounded hover:opacity-80 transition"
             >
               {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
             </button>
 
-            <button
-              onClick={() => navigate("/home")}
-              className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
-            >
-              LOGOUT
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={() => {
+                  localStorage.removeItem("authToken");
+                  localStorage.removeItem("userName");
+                  localStorage.removeItem("userEmail");
+                  navigate("/login");
+                }}
+                className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
+              >
+                LOGOUT
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
+              >
+                LOGIN
+              </button>
+            )}
           </div>
         </header>
 

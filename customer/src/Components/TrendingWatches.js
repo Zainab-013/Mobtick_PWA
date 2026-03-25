@@ -31,15 +31,15 @@ const TrendingWatches = ({ deals }) => {
           <div
             key={index}
             onClick={() => setSelectedWatch(watch)} // pass full watch
-            className="w-64 sm:w-72 md:w-60 lg:w-64 border rounded-xl p-4 shadow hover:shadow-lg transition cursor-pointer flex-shrink-0"
+            className="w-64 sm:w-72 md:w-60 lg:w-64 border rounded-xl p-4 shadow hover:shadow-lg transition cursor-pointer flex-shrink-0 bg-white dark:bg-gray-800 dark:border-gray-700"
           >
             <img
               src={watch.imageUrl}
               alt={watch.brandName}
               className="w-full h-48 object-cover rounded-md mb-3"
             />
-            <h3 className="text-lg font-semibold">{watch.brandName}</h3>
-            <p className="text-gray-600 text-sm mb-2">{watch.description}</p>
+            <h3 className="text-lg font-semibold dark:text-white">{watch.brandName}</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{watch.description}</p>
             <div className="flex justify-between items-center mb-3">
               <span className="text-xl font-bold text-green-600">₹{watch.price}</span>
               {watch.discount > 0 && (

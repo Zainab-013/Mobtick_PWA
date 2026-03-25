@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
+import { useDarkMode } from "../DarkModeContext";
 
 // Define the base path for authentication endpoints
-const AUTH_BASE_URL = "https://mobtick-backend.onrender.com/api/auth";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000";
+const AUTH_BASE_URL = `${API_BASE}/api/auth`;
 
 const Signup = () => {
     // --- State Management ---
     const [showShimmer, setShowShimmer] = useState(true);
-    const [darkMode, setDarkMode] = useState(false);
+    const { darkMode, toggleDarkMode } = useDarkMode();
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const [fullname, setFullname] = useState("");
     const [email, setEmail] = useState("");
@@ -29,7 +32,7 @@ const Signup = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    const toggleDarkMode = () => setDarkMode(!darkMode);
+
     const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
     const goBackToSignup = () => {
@@ -49,6 +52,7 @@ const Signup = () => {
         setError("");
         setSuccess("");
         setIsResending(false);
+        setLoading(true);
 
         const url = otpSent 
             ? `${AUTH_BASE_URL}/verify-otp` 
@@ -121,6 +125,8 @@ const Signup = () => {
             console.error("7. CATCH BLOCK EXECUTED: Network or JSON parsing failure.", err);
             setError("⚠️ Server error, try again later. (Check console for network failure)");
             setSuccess("");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -246,15 +252,15 @@ const Signup = () => {
                     <div className="flex justify-center">
                         <button
                             type="submit"
-                            disabled={isResending} 
-                            className={`w-full px-14 py-2 rounded-md text-white bg-gray-600 hover:bg-gray-700 transition text-sm ${isResending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={isResending || loading} 
+                            className={`w-full px-14 py-2 rounded-md text-white bg-gray-600 hover:bg-gray-700 transition text-sm ${(isResending || loading) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            {otpSent ? 'Verify OTP & Complete Signup' : 'Send OTP & Signup'}
+                            {loading ? (otpSent ? 'Verifying...' : 'Sending OTP...') : (otpSent ? 'Verify OTP & Complete Signup' : 'Send OTP & Signup')}
                         </button>
                     </div>
                 </form>
 
-                <button onClick={() => navigate("/")} className="mt-3 text-white underline w-full">
+                <button onClick={() => navigate("/login")} className="mt-3 text-white underline w-full">
                     Already have an account? Login
                 </button>
             </div>

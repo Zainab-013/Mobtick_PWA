@@ -1,5 +1,6 @@
 // src/Components/Footer.js
 import React from "react";
+import { Link } from "react-router-dom";
 import { FaMapMarkerAlt, FaEnvelope, FaPhoneAlt } from "react-icons/fa";
 const Footer = () => {
   return (
@@ -17,7 +18,7 @@ const Footer = () => {
           <h3 className="text-lg font-semibold text-white mb-3">Quick Links</h3>
           <ul className="space-y-2">
             {[
-              { name: "Home", link: "/" },
+              { name: "Home", link: "/home" },
               { name: "Watches", link: "/watches" },
               { name: "Login", link: "/login" },
               { name: "Cart", link: "/cart" },
@@ -25,13 +26,13 @@ const Footer = () => {
                { name: "Reviews", link: "/reviews" },
             ].map((item, index) => (
               <li key={index}>
-                <a
-                  href={item.link}
+                <Link
+                  to={item.link}
                   className="relative group inline-block text-white hover:text-gray-400 transition duration-300"
                 >
                   {item.name}
                   <span className="absolute left-0 -bottom-0.5 w-0 h-[2px] bg-white transition-all duration-300 group-hover:w-full"></span>
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

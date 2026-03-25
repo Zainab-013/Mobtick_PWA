@@ -4,18 +4,35 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Plus, Minus, Trash2 } from "lucide-react";
 import { BsCart3 } from "react-icons/bs";
 import mobticklogo from "../assets/mobticklogo.png";
+import { useDarkMode } from "../DarkModeContext";
 
 const Cart = () => {
-  const [darkMode, setDarkMode] = useState(true);
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const [animateHeader, setAnimateHeader] = useState(false);
   const [animateMain, setAnimateMain] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("authToken"));
+
+  useEffect(() => {
+    const checkAuth = () => setIsLoggedIn(!!localStorage.getItem("authToken"));
+    window.addEventListener("storage", checkAuth);
+    window.addEventListener("authChange", checkAuth);
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("authChange", checkAuth);
+    };
+  }, []);
 
   // ✅ Load cart from localStorage initially
   const [cartItems, setCartItems] = useState(() => {
-    const savedCart = localStorage.getItem("cartItems");
-    return savedCart ? JSON.parse(savedCart) : [];
+    try {
+      const savedCart = localStorage.getItem("cartItems");
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch {
+      localStorage.removeItem("cartItems");
+      return [];
+    }
   });
 
   // ✅ Handle new product from navigation
@@ -34,8 +51,6 @@ const Cart = () => {
         } else {
           updated = [...prev, { ...newItem, quantity: 1 }];
         }
-        // ✅ Save updated cart to localStorage
-        localStorage.setItem("cartItems", JSON.stringify(updated));
         return updated;
       });
     }
@@ -62,15 +77,12 @@ const Cart = () => {
           ? { ...item, quantity: Math.max(1, item.quantity + delta) }
           : item
       );
-      localStorage.setItem("cartItems", JSON.stringify(updated));
       return updated;
     });
   };
 
   const removeItem = (id) => {
-    const updated = cartItems.filter((item) => item.id !== id);
-    setCartItems(updated);
-    localStorage.setItem("cartItems", JSON.stringify(updated));
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   const total = cartItems.reduce(
@@ -110,18 +122,32 @@ const Cart = () => {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={toggleDarkMode}
               className="text-xs sm:text-sm bg-gray-700 dark:bg-gray-200 text-white dark:text-black px-3 py-1 rounded hover:opacity-80 transition"
             >
               {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
             </button>
 
-            <button
-              onClick={() => navigate("/home")}
-              className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
-            >
-              LOGOUT
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={() => {
+                  localStorage.removeItem("authToken");
+                  localStorage.removeItem("userName");
+                  localStorage.removeItem("userEmail");
+                  navigate("/login");
+                }}
+                className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
+              >
+                LOGOUT
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
+              >
+                LOGIN
+              </button>
+            )}
           </div>
         </header>
 

@@ -2,26 +2,39 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import mobticklogo from "../assets/mobticklogo.png";
+import { useDarkMode } from "../DarkModeContext";
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [botTyping, setBotTyping] = useState(false);
   const [quickReplies, setQuickReplies] = useState([]);
-  const [darkMode, setDarkMode] = useState(true);
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const [animateHeader, setAnimateHeader] = useState(false);
 
   const chatEndRef = useRef(null);
   const navigate = useNavigate();
-
-  // Generate unique userId
-  const userId =
-    "user_" +
-    (localStorage.getItem("userId") || Math.floor(Math.random() * 10000));
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("authToken"));
 
   useEffect(() => {
-    localStorage.setItem("userId", userId);
-  }, [userId]);
+    const checkAuth = () => setIsLoggedIn(!!localStorage.getItem("authToken"));
+    window.addEventListener("storage", checkAuth);
+    window.addEventListener("authChange", checkAuth);
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("authChange", checkAuth);
+    };
+  }, []);
+
+  // Generate unique userId (no stacking prefix)
+  const [userId] = useState(() => {
+    let stored = localStorage.getItem("chatUserId");
+    if (!stored) {
+      stored = "user_" + Math.floor(Math.random() * 100000);
+      localStorage.setItem("chatUserId", stored);
+    }
+    return stored;
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimateHeader(true), 100);
@@ -42,7 +55,7 @@ const Chatbot = () => {
 
     try {
       const response = await axios.post(
-        "https://mobtick-chatbot-backend.onrender.com/chat",
+        `${process.env.REACT_APP_CHATBOT_API || "https://mobtick-chatbot-backend.onrender.com"}/chat`,
         {
           message,
           userId,
@@ -115,18 +128,32 @@ const Chatbot = () => {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setDarkMode((prev) => !prev)}
+              onClick={toggleDarkMode}
               className="text-xs sm:text-sm bg-gray-700 dark:bg-gray-200 text-white dark:text-black px-3 py-1 rounded hover:opacity-80 transition"
             >
               {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
             </button>
 
-            <button
-              onClick={() => navigate("/home")}
-              className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
-            >
-              LOGOUT
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={() => {
+                  localStorage.removeItem("authToken");
+                  localStorage.removeItem("userName");
+                  localStorage.removeItem("userEmail");
+                  navigate("/login");
+                }}
+                className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
+              >
+                LOGOUT
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
+              >
+                LOGIN
+              </button>
+            )}
           </div>
         </header>
 

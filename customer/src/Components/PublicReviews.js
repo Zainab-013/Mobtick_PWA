@@ -8,8 +8,8 @@ import "swiper/css/pagination";
 
 const PublicReviews = ({ reviews }) => {
   return (
-    <section className="py-16 px-6 bg-white overflow-hidden">
-      <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 text-gray-900">
+    <section className="py-16 px-6 bg-white dark:bg-black/90 overflow-hidden transition-colors duration-500">
+      <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 text-gray-900 dark:text-white">
         What Our Customers Say
       </h2>
 

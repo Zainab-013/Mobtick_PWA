@@ -1,10 +1,10 @@
 // src/Components/Navbar.js
 import React, { useState, useEffect } from "react";
-import { FaBars, FaTimes, FaHome, FaStar, FaUserAlt, FaBoxOpen } from "react-icons/fa"; 
+import { FaBars, FaTimes, FaHome, FaStar, FaUserAlt, FaBoxOpen, FaSignOutAlt } from "react-icons/fa"; 
  // Home & Reviews
 import { MdWatch } from "react-icons/md"; // Watch icon
 import { IoMdChatbubbles } from "react-icons/io"; // Sleek chatbot icon
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
 import mobticklogo from "../assets/mobticklogo.png";
 
 const Navbar = () => {
@@ -31,14 +31,51 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-const navItems = [
-  { name: "Home", to: "/home", icon: <FaHome className="text-blue-400 text-2xl mb-1" /> },
-  { name: "Watches", to: "/watches", icon: <MdWatch className="text-yellow-400 text-2xl mb-1" /> },
-  { name: "Login", to: "/login", icon: <FaUserAlt className="text-green-400 text-2xl mb-1" /> }, // Changed
-  { name: "Cart", to: "/cart", icon: <FaBoxOpen className="text-red-400 text-2xl mb-1" /> },  // Changed
-  { name: "Chatbot", to: "/chatbot", icon: <IoMdChatbubbles className="text-purple-400 text-2xl mb-1" /> },
-  { name: "Reviews", to: "/reviews", icon: <FaStar className="text-yellow-300 text-2xl mb-1" /> },
-];
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(() => 
+    !!localStorage.getItem("authToken") || !!localStorage.getItem("userName")
+  );
+
+  useEffect(() => {
+    // Check auth status immediately
+    const checkAuth = () => {
+      setIsLoggedIn(!!localStorage.getItem("authToken") || !!localStorage.getItem("userName"));
+    };
+    checkAuth();
+    
+    // Listen for cross-tab storage changes AND same-tab auth changes
+    window.addEventListener("storage", checkAuth);
+    window.addEventListener("authChange", checkAuth);
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("authChange", checkAuth);
+    };
+  }, [location.pathname]); // Re-verify on every route change Just in Case
+
+  const handleLogout = (e) => {
+    e && e.preventDefault();
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
+    window.location.reload(); // Force full app reload to clear memory/state
+  };
+
+  const navItems = [
+    { name: "Home", to: "/home", icon: <FaHome className="text-blue-400 text-2xl mb-1" /> },
+    { name: "Watches", to: "/watches", icon: <MdWatch className="text-yellow-400 text-2xl mb-1" /> },
+    { 
+      name: isLoggedIn ? "Logout" : "Login", 
+      to: isLoggedIn ? "/home" : "/login", 
+      icon: isLoggedIn 
+        ? <FaSignOutAlt className="text-red-400 text-2xl mb-1" /> 
+        : <FaUserAlt className="text-green-400 text-2xl mb-1" />,
+      onClick: isLoggedIn ? handleLogout : null
+    },
+    { name: "Cart", to: "/cart", icon: <FaBoxOpen className="text-red-400 text-2xl mb-1" /> },
+    { name: "Chatbot", to: "/chatbot", icon: <IoMdChatbubbles className="text-purple-400 text-2xl mb-1" /> },
+    { name: "Reviews", to: "/reviews", icon: <FaStar className="text-yellow-300 text-2xl mb-1" /> },
+  ];
 
   return (
     <nav
@@ -60,6 +97,9 @@ const navItems = [
     <li key={idx} className="flex flex-col items-center group">
       <RouterLink
         to={item.to}
+        onClick={(e) => {
+          if (item.onClick) item.onClick(e);
+        }}
         className="flex flex-col items-center hover:text-gray-400 font-bold transition duration-300 cursor-pointer relative"
       >
         {item.icon}
@@ -90,7 +130,10 @@ const navItems = [
         <li key={idx} className="group">
           <RouterLink
             to={item.to}
-            onClick={() => setMenuOpen(false)}
+            onClick={(e) => {
+              setMenuOpen(false);
+              if (item.onClick) item.onClick(e);
+            }}
             className="block hover:text-gray-400 transition duration-300 cursor-pointer flex flex-col items-center relative"
           >
             {item.icon}

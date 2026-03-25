@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import CustomerHome from "./pages/CustomerHome";
@@ -14,16 +14,30 @@ import Men from "./pages/Men";
 import Women from "./pages/Women";
 import Unisex from "./pages/Unisex";
 import BuyNow from "./pages/BuyNow";
-import Reviews from "./pages/Reviews"; // Adjust the path if needed
+import Reviews from "./pages/Reviews";
 import MinimalPage from "./pages/MinimalPage";
 import ThankYou from "./pages/Thankyou";
 
-const stripePromise = loadStripe("pk_test_51SDlnFJq0C8bwqHFjsow8jWHN3PpeL3yJwAWN400jAyRFBnMRoaiwWzDQXOpeULjq054FeD7Dun5ywhnvBZWDTK800BYS2B6eV"); // ⚡️ Use your publishable key here
+const stripeKey = process.env.REACT_APP_STRIPE_KEY;
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
-// Layout wrapper → shows Navbar only on homepage
+// Protected route wrapper → redirects to /login if not authenticated
+const ProtectedRoute = ({ children }) => {
+  const isAuthenticated = !!localStorage.getItem("authToken");
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+// Layout wrapper → shows Navbar on main pages (not login/signup/splash)
 const Layout = ({ children }) => {
   const location = useLocation();
-  const showNavbar = location.pathname === "/home";
+  const hideNavbarPaths = [
+    "/", "/login", "/signup", "/buynow", "/thankyou", "/mpage",
+    "/watches", "/cart", "/chatbot", "/reviews", "/men", "/women", "/unisex",
+  ];
+  const showNavbar = !hideNavbarPaths.includes(location.pathname);
 
   return (
     <>
@@ -33,32 +47,50 @@ const Layout = ({ children }) => {
   );
 };
 
+// 404 Page
+const NotFound = () => (
+  <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900">
+    <h1 className="text-6xl font-bold text-gray-800 dark:text-white mb-4">404</h1>
+    <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">Page not found</p>
+    <a href="/home" className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition">
+      Go Home
+    </a>
+  </div>
+);
+
 function App() {
   return (
     <Router>
       <Layout>
         <Routes>
-          <Route
-            path="/buynow"
-            element={
-              <Elements stripe={stripePromise}>
-                <BuyNow />
-              </Elements>
-            }
-          />
+          {/* Public routes — anyone can browse */}
           <Route path="/" element={<AnimatedLogo />} />
-          <Route path="/thankyou" element={<ThankYou />} />
-          <Route path="/home" element={<CustomerHome />} />
-          <Route path="/watches" element={<Watches />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/chatbot" element={<Chatbot />} />
-          <Route path="/reviews" element={<Reviews />} />
+          <Route path="/mpage" element={<MinimalPage />} />
+          <Route path="/home" element={<CustomerHome />} />
+          <Route path="/watches" element={<Watches />} />
           <Route path="/men" element={<Men />} />
           <Route path="/women" element={<Women />} />
           <Route path="/unisex" element={<Unisex />} />
-          <Route path="/mpage" element={<MinimalPage />} />
+          <Route path="/chatbot" element={<Chatbot />} />
+          <Route path="/reviews" element={<Reviews />} />
+          <Route path="/cart" element={<Cart />} />
+
+          {/* Protected routes — login required for buying/paying */}
+          <Route
+            path="/buynow"
+            element={
+              <ProtectedRoute>
+                <Elements stripe={stripePromise}>
+                  <BuyNow />
+                </Elements>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/thankyou" element={<ProtectedRoute><ThankYou /></ProtectedRoute>} />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>
     </Router>

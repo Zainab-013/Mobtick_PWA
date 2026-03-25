@@ -8,9 +8,10 @@ const ThankYou = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Accept real order details from BuyNow, with sensible fallback
   const orderDetails = location.state?.orderDetails || {
     product: "Watch",
-    amount: "15999",
+    amount: "0",
     date: new Date().toLocaleString(),
     orderId: "ORDER" + Date.now()
   };
@@ -25,14 +26,14 @@ const ThankYou = () => {
 
     doc.text(`Order ID: ${orderDetails.orderId}`, 20, 40);
     doc.text(`Product: ${orderDetails.product}`, 20, 50);
-    doc.text(`Amount: ₹${orderDetails.amount}`, 20, 60);
+    doc.text(`Amount: Rs.${orderDetails.amount}`, 20, 60);
     doc.text(`Date: ${orderDetails.date}`, 20, 70);
 
-    doc.setDrawColor(0, 255, 0); // Green
+    doc.setDrawColor(0, 255, 0);
     doc.line(20, 80, 180, 80);
 
     doc.setFontSize(14);
-    doc.setTextColor(40, 167, 69); // Bootstrap Green
+    doc.setTextColor(40, 167, 69);
     doc.text("Thank you for your purchase!", 20, 95);
 
     doc.save(`receipt_${orderDetails.orderId}.pdf`);
@@ -43,10 +44,15 @@ const ThankYou = () => {
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 flex flex-col items-center max-w-md w-full">
         <img src={mobticklogo} alt="MOBTICK Logo" className="w-16 h-16 rounded-full mb-4" />
         <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">Thank You!</h1>
-        <p className="text-lg text-gray-700 dark:text-gray-200 mb-6">
+        <p className="text-lg text-gray-700 dark:text-gray-200 mb-2">
           Your order has been placed successfully.<br />
           We appreciate your purchase!
         </p>
+        {orderDetails.orderId && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Order ID: <span className="font-mono font-semibold">{orderDetails.orderId}</span>
+          </p>
+        )}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <button
             onClick={handleDownloadPDF}
