@@ -96,12 +96,11 @@ const res = await fetch(`${API_BASE}/api/reviews`);
   };
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="relative min-h-screen bg-gray-100 dark:bg-black/90 text-gray-900 dark:text-white font-sans transition-all duration-500">
+    <div className="relative min-h-screen bg-gray-100 dark:bg-black/90 text-gray-900 dark:text-white font-sans transition-all duration-500">
         
         {/* 🔹 Shimmer Background */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 animate-shimmer" />
+        <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 bg-[length:200%_100%] animate-[shimmer_8s_linear_infinite]" />
         </div>
 
         {/* 🔹 Navbar */}
@@ -137,6 +136,7 @@ const res = await fetch(`${API_BASE}/api/reviews`);
                   localStorage.removeItem("authToken");
                   localStorage.removeItem("userName");
                   localStorage.removeItem("userEmail");
+                  window.dispatchEvent(new Event("authChange"));
                   navigate("/login");
                 }}
                 className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
@@ -243,7 +243,6 @@ const res = await fetch(`${API_BASE}/api/reviews`);
 </div>
 
         </main>
-      </div>
     </div>
   );
 };

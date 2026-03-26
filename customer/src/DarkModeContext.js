@@ -10,6 +10,12 @@ export const DarkModeProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
+    // Apply 'dark' class on <html> so Tailwind dark: variants work globally
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   }, [darkMode]);
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);

@@ -133,8 +133,7 @@ const ProductPage = ({ category, title }) => {
   ];
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="relative min-h-screen bg-gray-100 dark:bg-black/90 text-gray-900 dark:text-white font-sans transition-all duration-500">
+    <div className="relative min-h-screen bg-gray-100 dark:bg-black/90 text-gray-900 dark:text-white font-sans transition-all duration-500">
         {/* Navbar */}
         <header
           className={`flex items-center justify-between border-b border-black dark:border-white 
@@ -180,8 +179,8 @@ const ProductPage = ({ category, title }) => {
         >
           {/* Sidebar Filters */}
           <aside className={`${
-            showFilters ? "block" : "hidden"
-          } md:block w-full md:w-64 p-6 overflow-y-auto md:max-h-screen bg-white dark:bg-black/30 border-b md:border-b-0 md:border-r border-gray-300 dark:border-white backdrop-blur-md`}>
+            showFilters ? "max-h-[1500px] opacity-100 py-6" : "max-h-0 opacity-0 py-0 md:max-h-screen md:opacity-100 md:py-6"
+          } w-full md:w-64 px-6 overflow-hidden md:overflow-y-auto transition-all duration-500 ease-in-out bg-white dark:bg-black/30 border-b md:border-b-0 md:border-r border-gray-300 dark:border-white backdrop-blur-md`}>
             <h2 className="text-xl font-bold mb-6">Filters</h2>
             <button
               onClick={resetFilters}
@@ -298,7 +297,6 @@ const ProductPage = ({ category, title }) => {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 };

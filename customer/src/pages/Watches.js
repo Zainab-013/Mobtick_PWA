@@ -34,8 +34,7 @@ const Watches = () => {
   }, []);
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="relative min-h-screen bg-gray-100 dark:bg-black/90 text-gray-900 dark:text-white font-sans transition-all duration-500">
+    <div className="relative min-h-screen bg-gray-100 dark:bg-black/90 text-gray-900 dark:text-white font-sans transition-all duration-500">
         
         {/* ✅ Navbar (exactly like Chatbot) */}
         <header
@@ -73,6 +72,7 @@ const Watches = () => {
                   localStorage.removeItem("authToken");
                   localStorage.removeItem("userName");
                   localStorage.removeItem("userEmail");
+                  window.dispatchEvent(new Event("authChange"));
                   navigate("/login");
                 }}
                 className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 
@@ -105,7 +105,7 @@ const Watches = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
             {/* Men’s Watches */}
             <div
-              className="group w-full h-72 sm:h-80 bg-white dark:bg-gray-800 
+              className="group w-full h-full min-h-[20rem] py-6 bg-white dark:bg-gray-800 
                          border-2 border-transparent dark:border-white rounded-xl 
                          shadow-lg p-6 flex flex-col items-center justify-center 
                          text-center hover:scale-105 transform transition-all duration-300"
@@ -126,9 +126,9 @@ const Watches = () => {
 
             {/* Women’s Watches */}
             <div
-              className="group w-full h-72 sm:h-80 bg-white dark:bg-gray-800 
+              className="group w-full h-full min-h-[20rem] py-6 bg-white dark:bg-gray-800 
                          border-2 border-transparent dark:border-white rounded-xl 
-                         shadow-lg p-6 flex flex-col items-center justify-center 
+                         shadow-lg px-6 flex flex-col items-center justify-center 
                          text-center hover:scale-105 transform transition-all duration-300"
             >
               <GiWatch className="text-gray-500 dark:text-gray-300 text-7xl mb-4 group-hover:text-pink-500 transition-colors duration-300" />
@@ -146,7 +146,7 @@ const Watches = () => {
 
             {/* Unisex Watches */}
             <div
-              className="group w-full h-72 sm:h-80 bg-white dark:bg-gray-800 
+              className="group w-full h-full min-h-[20rem] py-6 bg-white dark:bg-gray-800 
                          border-2 border-transparent dark:border-white rounded-xl 
                          shadow-lg p-6 flex flex-col items-center justify-center 
                          text-center hover:scale-105 transform transition-all duration-300"
@@ -167,7 +167,6 @@ const Watches = () => {
           </div>
         </main>
       </div>
-    </div>
   );
 };
 

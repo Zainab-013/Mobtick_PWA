@@ -306,8 +306,7 @@ const BuyNow = () => {
   };
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-gray-100 dark:bg-black/90 font-sans transition-all duration-500 flex flex-col text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-gray-100 dark:bg-black/90 font-sans transition-all duration-500 flex flex-col text-gray-900 dark:text-white">
         {/* Navbar */}
         <header
           className={`flex items-center justify-between border-b border-black dark:border-white 
@@ -398,27 +397,27 @@ const BuyNow = () => {
                 Billing & Payment
               </h3>
 
-              <input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-2 w-full" />
-              <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-2 w-full" />
-              <input type="text" name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-2 w-full" />
+              <input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} className="p-3 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-3 w-full" />
+              <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="p-3 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-3 w-full" />
+              <input type="text" name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} className="p-3 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-3 w-full" />
 
               {/* Address + Use Location */}
-              <div className="flex flex-col sm:flex-row gap-2 mb-2">
-                <input type="text" name="address" placeholder="Address" value={formData.address} onChange={handleChange} className="flex-1 p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
+              <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                <input type="text" name="address" placeholder="Address" value={formData.address} onChange={handleChange} className="flex-1 p-3 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
                 <button type="button" onClick={handleUseLocation} className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm transition whitespace-nowrap">
                   📍 Use My Location
                 </button>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 mb-2">
-                <input type="text" name="city" placeholder="City" value={formData.city || ""} onChange={handleChange} className="flex-1 p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
-                <input type="text" name="state" placeholder="State" value={formData.state || ""} onChange={handleChange} className="flex-1 p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
-                <input type="text" name="pincode" placeholder="Pincode" value={formData.pincode || ""} onChange={handleChange} className="flex-1 p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+                <input type="text" name="city" placeholder="City" value={formData.city || ""} onChange={handleChange} className="p-3 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
+                <input type="text" name="state" placeholder="State" value={formData.state || ""} onChange={handleChange} className="p-3 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
+                <input type="text" name="pincode" placeholder="Pincode" value={formData.pincode || ""} onChange={handleChange} className="p-3 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition" />
               </div>
 
-              <input type="date" name="orderDate" placeholder="Order Date" value={formData.orderDate} onChange={handleChange} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-2 w-full" />
+              <input type="date" name="orderDate" placeholder="Order Date" value={formData.orderDate} onChange={handleChange} className="p-3 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition mb-3 w-full" />
 
-              <select name="priceMode" value={formData.priceMode} onChange={handleChange} className="p-2 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition w-full">
+              <select name="priceMode" value={formData.priceMode} onChange={handleChange} className="p-3 rounded border dark:border-white bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 text-sm transition w-full">
                 <option value="">Select Payment Mode</option>
                 <option value="cod">Cash on Delivery</option>
                 <option value="online">Online Payment</option>
@@ -476,7 +475,6 @@ const BuyNow = () => {
             </div>
           </div>
         </main>
-      </div>
     </div>
   );
 };

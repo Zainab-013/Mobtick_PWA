@@ -63,46 +63,44 @@ const CustomerHome = () => {
   }, []);
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-white dark:bg-black/90 text-gray-900 dark:text-white transition-all duration-500">
-        {/* Dark Mode Toggle */}
-        <button
-          onClick={toggleDarkMode}
-          className="fixed top-20 right-4 z-50 text-xs sm:text-sm bg-gray-700 dark:bg-gray-200 text-white dark:text-black px-3 py-1.5 rounded-full shadow-lg hover:opacity-80 transition"
-        >
-          {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
-        </button>
+    <div className="min-h-screen bg-white dark:bg-black/90 text-gray-900 dark:text-white transition-all duration-500">
+      {/* Dark Mode Toggle */}
+      <button
+        onClick={toggleDarkMode}
+        className="fixed top-20 right-4 z-40 text-xs sm:text-sm bg-gray-700 dark:bg-gray-200 text-white dark:text-black px-3 py-1.5 rounded-full shadow-lg hover:opacity-80 transition"
+      >
+        {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+      </button>
 
-        {/* Hero Slider */}
-        <HeroSlider />
+      {/* Hero Slider */}
+      <HeroSlider />
 
-        {/* Trending Watches Section */}
-        <section className="py-10 px-4">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 text-gray-900 dark:text-white">Trending Watches</h2>
+      {/* Trending Watches Section */}
+      <section className="py-10 px-4">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 text-gray-900 dark:text-white">Trending Watches</h2>
 
-          {loading ? (
-            <p className="text-center text-lg py-6 dark:text-gray-300">Loading...</p>
-          ) : errMsg ? (
-            <p className="text-center text-lg py-6 text-red-500">{errMsg}</p>
-          ) : deals.length > 0 ? (
-            <TrendingWatches deals={deals} />
-          ) : (
-            <p className="text-center text-lg py-6 text-gray-600 dark:text-gray-400">
-              No trending watches available.
-            </p>
-          )}
-        </section>
-
-        {/* Public Reviews Section */}
-        {reviewsErr ? (
-          <p className="text-center text-lg py-6 text-red-500">{reviewsErr}</p>
+        {loading ? (
+          <p className="text-center text-lg py-6 dark:text-gray-300">Loading...</p>
+        ) : errMsg ? (
+          <p className="text-center text-lg py-6 text-red-500">{errMsg}</p>
+        ) : deals.length > 0 ? (
+          <TrendingWatches deals={deals} />
         ) : (
-          <PublicReviews reviews={reviews} />
+          <p className="text-center text-lg py-6 text-gray-600 dark:text-gray-400">
+            No trending watches available.
+          </p>
         )}
+      </section>
 
-        {/* Footer */}
-        <Footer />
-      </div>
+      {/* Public Reviews Section */}
+      {reviewsErr ? (
+        <p className="text-center text-lg py-6 text-red-500">{reviewsErr}</p>
+      ) : (
+        <PublicReviews reviews={reviews} />
+      )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

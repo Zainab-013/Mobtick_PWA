@@ -105,8 +105,7 @@ const Chatbot = () => {
   useEffect(scrollToBottom, [messages]);
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-white dark:bg-black/90 text-black dark:text-white font-sans transition-all duration-500">
+    <div className="min-h-screen bg-white dark:bg-black/90 text-black dark:text-white font-sans transition-all duration-500">
         {/* Navbar */}
         <header
           className={`flex items-center justify-between border-b border-black dark:border-white px-4 sm:px-6 py-2 bg-black transition-all duration-700 ${
@@ -140,6 +139,7 @@ const Chatbot = () => {
                   localStorage.removeItem("authToken");
                   localStorage.removeItem("userName");
                   localStorage.removeItem("userEmail");
+                  window.dispatchEvent(new Event("authChange"));
                   navigate("/login");
                 }}
                 className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
@@ -217,7 +217,6 @@ const Chatbot = () => {
             </button>
           </div>
         </main>
-      </div>
     </div>
   );
 };

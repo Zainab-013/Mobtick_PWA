@@ -85,7 +85,7 @@ const HeroSlider = () => {
   };
 
   return (
-    <section className="relative w-full bg-white dark:bg-black/90 pt-[80px] transition-colors duration-500">
+    <section className="relative w-full bg-white dark:bg-black/90 pt-[80px] pb-16 transition-colors duration-500">
       {/* Top Deals Heading */}
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-6 dark:text-white">
          Top Deals and Discounts
@@ -100,7 +100,7 @@ const HeroSlider = () => {
           {slides.map((slide, index) => (
             <div
               key={index}
-              className="w-full flex-shrink-0 flex flex-col md:flex-row items-center justify-between px-4 sm:px-8 md:px-20"
+              className="w-full flex-shrink-0 flex flex-col md:flex-row items-center justify-between px-4 sm:px-8 md:px-20 pb-8 md:pb-0"
             >
               {/* Left Side Text */}
               <div className="w-full md:w-1/2 flex flex-col justify-center space-y-3 md:space-y-4 text-center md:text-left pl-0 md:pl-16 lg:pl-24 order-2 md:order-1 mt-4 md:mt-0">
@@ -144,7 +144,7 @@ const HeroSlider = () => {
         {/* Prev Arrow */}
         <button
           onClick={prevSlide}
-          className="absolute top-1/2 left-4 -translate-y-1/2 bg-gray-300 hover:bg-gray-400 p-2 rounded-full text-xl"
+          className="hidden sm:block absolute top-1/2 left-4 -translate-y-1/2 bg-gray-300 hover:bg-gray-400 p-2 rounded-full text-xl"
         >
           <FaChevronLeft />
         </button>
@@ -152,7 +152,7 @@ const HeroSlider = () => {
         {/* Next Arrow */}
         <button
           onClick={nextSlide}
-          className="absolute top-1/2 right-4 -translate-y-1/2 bg-gray-300 hover:bg-gray-400 p-2 rounded-full text-xl"
+          className="hidden sm:block absolute top-1/2 right-4 -translate-y-1/2 bg-gray-300 hover:bg-gray-400 p-2 rounded-full text-xl"
         >
           <FaChevronRight />
         </button>

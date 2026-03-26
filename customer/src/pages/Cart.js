@@ -99,10 +99,9 @@ const Cart = () => {
   };
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="relative min-h-screen bg-gray-100 dark:bg-black/90 text-gray-900 dark:text-white font-sans transition-all duration-500">
+    <div className="relative min-h-screen bg-gray-100 dark:bg-black/90 text-gray-900 dark:text-white font-sans transition-all duration-500">
         {/* Shimmer background */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="w-[200%] h-[200%] bg-gradient-to-r from-transparent via-white/10 to-transparent dark:via-gray-700/10 animate-[shimmer_8s_linear_infinite]"></div>
         </div>
 
@@ -134,6 +133,7 @@ const Cart = () => {
                   localStorage.removeItem("authToken");
                   localStorage.removeItem("userName");
                   localStorage.removeItem("userEmail");
+                  window.dispatchEvent(new Event("authChange"));
                   navigate("/login");
                 }}
                 className="text-sm sm:text-lg font-bold bg-gray-400 px-3 py-1 sm:px-4 sm:py-2 rounded hover:bg-gray-500 transition"
@@ -225,7 +225,6 @@ const Cart = () => {
             </button>
           </div>
         </main>
-      </div>
     </div>
   );
 };
